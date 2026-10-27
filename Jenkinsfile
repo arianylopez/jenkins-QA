@@ -11,14 +11,15 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Clonando el repositorio...'
-                git branch: 'main', url: 'https://github.com'
+                git branch: 'prueba_karate', url: 'https://github.com/arianylopez/jenkins-QA.git'
+                
             }
         }
 
         stage('Build & Test') {
             steps {
                 echo 'Ejecutando pruebas Karate...'
-                bat 'mvn test -Dkarate.options="--tags @Smock"'
+                bat 'mvn test -Dkarate.options="--tags @Regresion"'
             }
         }
 
