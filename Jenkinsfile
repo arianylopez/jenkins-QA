@@ -17,7 +17,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com'
+                git branch: 'prueba_allure', url: 'https://github.com/arianylopez/jenkins-QA.git'
             }
         }
 
@@ -49,7 +49,7 @@ pipeline {
                 allure([
                     includeProperties: false,
                     jdk: '',
-                    results: [[path: '**/allure-results/*.json']], // <-- patrón agregado
+                    results: [[path: 'allure-results']], // <-- patrón agregado
                     reportBuildPolicy: 'ALWAYS'
                 ])
             }
