@@ -1,38 +1,56 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven' // Nombre del Maven configurado en Jenkins
-        jdk 'Java17'   // Nombre del JDK configurado en Jenkins
+    environment {
+        // Carpeta absoluta para resultados y reportes
+        ALLURE_RESULTS = "${env.WORKSPACE}/allure-results"
+        ALLURE_REPORT  = "${env.WORKSPACE}/allure-report"
     }
 
     stages {
+        stage('Preparar Workspace') {
+            steps {
+                echo "Limpiando workspace..."
+                deleteDir()
+            }
+        }
 
         stage('Checkout') {
             steps {
-                echo 'Clonando el repositorio...'
-                git branch: 'prueba_karate', url: 'https://github.com/arianylopez/jenkins-QA.git'
-                
+                git branch: 'main', url: 'https://github.com'
             }
         }
 
-        stage('Build & Test') {
+        stage('Instalar dependencias') {
             steps {
-                echo 'Ejecutando pruebas Karate...'
-                bat 'mvn test -Dkarate.options="--tags @Regresion"'
+                bat 'npm install'
             }
         }
 
-        stage('Publicar Reporte') {
+        stage('Ejecutar WDIO') {
             steps {
-                echo 'Publicando reporte HTML de Karate...'
-                publishHTML([
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: 'target/karate-reports',
-                    reportFiles: 'karate-summary.html',
-                    reportName: 'Reporte de Pruebas Karate'
+                echo "Ejecutando pruebas WDIO..."
+                bat "npx wdio run wdio.conf.js"
+            }
+        }
+
+        stage('Generar reporte Allure') {
+            steps {
+                echo "Generando reporte Allure..."
+                bat """
+                npx allure generate %ALLURE_RESULTS% --clean -o %ALLURE_REPORT%
+                """
+            }
+        }
+
+        stage('Publicar reporte Allure en Jenkins') {
+            steps {
+                echo "Publicando reporte Allure usando el plugin..."
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    results: [[path: '**/allure-results/*.json']], // <-- patrón agregado
+                    reportBuildPolicy: 'ALWAYS'
                 ])
             }
         }
@@ -40,14 +58,7 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline finalizado — limpiando workspace.'
-            cleanWs()
-        }
-        success {
-            echo 'Pruebas Karate ejecutadas con éxito.'
-        }
-        failure {
-            echo 'Falló alguna etapa del pipeline.'
+            echo 'Pipeline finalizada'
         }
     }
 }
