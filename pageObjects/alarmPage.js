@@ -1,7 +1,7 @@
 class AlarmPage {
   
   // 🔹 Selectores
-  get alarmTab() { return $('id=com.google.android.deskclock:id/navigation_bar_item_icon_container'); }
+  get alarmTab() { return $('id=com.google.android.deskclock:id/tab_menu_alarm'); }
   get addButton() { return $('~Add alarm'); }
   get okBtn() { return $('id=com.google.android.deskclock:id/material_timepicker_ok_button'); }
   get cancelBtn() { return $('id=com.google.android.deskclock:id/material_timepicker_cancel_button'); }
