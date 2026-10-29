@@ -1,8 +1,3 @@
-const incisoSeleccionado = process.argv.join(' ').match(/@inciso([1-4])/)?.[1]
-const featuresSeleccionados = incisoSeleccionado
-    ? [`./features/inciso${incisoSeleccionado}.feature`]
-    : ['./features/**/*.feature']
-
 exports.config = {
     //
     // ====================
@@ -10,6 +5,7 @@ exports.config = {
     // ====================
     // WebdriverIO supports running e2e tests as well as unit and component tests.
     runner: 'local',
+    port: 4723,
     //
     // ==================
     // Specify Test Files
@@ -25,7 +21,10 @@ exports.config = {
     // The path of the spec files will be resolved relative from the directory of
     // of the config file unless it's absolute.
     //
-    specs: featuresSeleccionados,
+    specs: [
+        // ToDo: define location for spec files here
+        './features/**/*.feature'
+    ],
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -46,27 +45,23 @@ exports.config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 1,
+    maxInstances: 10,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://saucelabs.com/platform/platform-configurator
     //
-     capabilities: [{
-        browserName: 'chrome',
-        browserVersion: 'stable',
-        'goog:chromeOptions': {
-            args: [
-                '--disable-infobars',
-                '--disable-extensions',
-                '--start-maximized',
-                'enable-automation',
-                '--disable-blink-features=AutomationControlled'
-            ]
-        }
-        // ELIMINAMOS EL BLOQUE 'wdio:chromedriverOptions' AQUÍ
+    capabilities: [{
+        // capabilities for local Appium web tests on an Android Emulator
+        platformName: 'Android',
+        "appium:deviceName": "Medium Phone example",          // nombre de tu emulador (adb devices)
+        "appium:platformVersion": "17.0",              // versión Android
+        "appium:automationName": "UiAutomator2",
+        "appium:appPackage": "com.google.android.deskclock",  // paquete de la app de Reloj
+        "appium:appActivity": "com.android.deskclock.DeskClock", // actividad principal
+        "appium:newCommandTimeout": 300,
+        "appium:autoGrantPermissions": true
     }],
-    
 
     //
     // ===================
@@ -115,8 +110,8 @@ exports.config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    // services: [],
-    //
+    services: ['appium'],
+
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
     // see also: https://webdriver.io/docs/frameworks
@@ -139,17 +134,16 @@ exports.config = {
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter
     reporters: [['allure', {
-		outputDir: 'allure-results',
-		disableWebdriverStepsReporting: true,
-		disableWebdriverScreenshotsReporting: false,
-		useCucumberStepReporter: true
-	}]
-	],
+        outputDir: 'allure-results',
+        disableWebdriverStepsReporting: true,
+        disableWebdriverScreenshotsReporting: false,
+        useCucumberStepReporter: true
+    }]],
 
     // If you are using Cucumber you need to specify the location of your step definitions.
     cucumberOpts: {
         // <string[]> (file/dir) require files before executing features
-        require: ['./features/step_definitions/hotel.steps.js'],
+        require: ['./features/step_definitions/alarmStep.js', './features/step_definitions/extrasStep.js'],
         // <boolean> show full backtrace for errors
         backtrace: false,
         // <string[]> ("extension:module") require files with the given EXTENSION after requiring MODULE (repeatable)
@@ -165,7 +159,7 @@ exports.config = {
         // <boolean> hide source uris
         source: true,
         // <boolean> fail if there are any undefined or pending steps
-        strict: true,
+        strict: false,
         // <string> (expression) only execute the features or scenarios with tags matching the expression
         tagExpression: '',
         // <number> timeout for step definitions
@@ -275,7 +269,6 @@ exports.config = {
      */
     // afterStep: function (step, scenario, result, context) {
     // },
-    
     /**
      *
      * Runs after a Cucumber Scenario.
@@ -288,11 +281,6 @@ exports.config = {
      */
     // afterScenario: function (world, result, context) {
     // },
-    afterScenario: async function (world, result) {
-            if (result.passed === false) {
-            await browser.takeScreenshot();
-        }
-    },
     /**
      *
      * Runs after a Cucumber Feature.
