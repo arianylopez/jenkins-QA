@@ -28,8 +28,13 @@ class AlarmPage {
     }
   // 🔹 Métodos de acción
   async openAlarmTab() {
-    await this.alarmTab.waitForDisplayed({ timeout: 5000 });
-    await this.alarmTab.click();
+    console.log('ALARM_TAB: esperando la pestana de alarmas.');
+    const tab = await this.alarmTab;
+    await tab.waitForDisplayed({ timeout: 15000 });
+    console.log('ALARM_TAB: pulsando la pestana de alarmas.');
+    await tab.click();
+    await this.addButton.waitForDisplayed({ timeout: 15000 });
+    console.log('ALARM_TAB_READY: boton Add alarm visible.');
   }
 
   async createAlarm(hour, minute) {

@@ -52,7 +52,7 @@ exports.config = {
         require: [path.join(root, 'features', 'step_definitions', 'alarmStep.js')],
         strict: true,
         dryRun: false,
-        tagExpression: process.env.MOBILE_TAGS || '@addAlarm or @cancelAlarm',
+        tags: process.env.MOBILE_TAGS || '@addAlarm or @cancelAlarm',
         timeout: 60000,
         ignoreUndefinedDefinitions: false,
     },
@@ -63,6 +63,14 @@ exports.config = {
     },
     async before() {
         console.log(`Sesion remota BrowserStack: ${browser.sessionId}`);
+        // Clock genera eventos frecuentes. Evitar la espera interna de UiAutomator2
+        // antes de cada busqueda; los page objects mantienen sus esperas explicitas.
+        await browser.updateSettings({ waitForIdleTimeout: 0, waitForSelectorTimeout: 0 });
+        const settings = await browser.getSettings();
+        if (Number(settings.waitForIdleTimeout) !== 0 || Number(settings.waitForSelectorTimeout) !== 0) {
+            throw new Error('UiAutomator2 no aplico las esperas configuradas. Revisa los ajustes de la sesion.');
+        }
+        console.log('UIAUTOMATOR_READY: waitForIdleTimeout=0, waitForSelectorTimeout=0; se conservan las esperas explicitas de elementos.');
         if (!await browser.isAppInstalled(clockPackage)) {
             throw new Error('Google Clock no esta instalado en este dispositivo. No se ejecutaran pruebas sobre la app de ejemplo.');
         }
@@ -87,6 +95,8 @@ exports.config = {
             android: osVersion,
             sessionId: browser.sessionId,
             starterApp,
+            waitForIdleTimeout: settings.waitForIdleTimeout,
+            waitForSelectorTimeout: settings.waitForSelectorTimeout,
         }, null, 2));
         console.log('CLOCK_REMOTE_VERIFIED: Google Clock abierto. A continuacion se ejecutan los escenarios Cucumber.');
     },
